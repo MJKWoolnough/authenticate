@@ -3,7 +3,6 @@ package authenticate
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"time"
@@ -32,22 +31,20 @@ func NewCodec(key []byte, maxAge time.Duration) (*Codec, error) {
 	}, nil
 }
 
-func (c *Codec) Encode(data []byte) string {
-	dst := make([]byte, nonceSize, nonceSize+len(data)+c.aead.Overhead())
+func (c *Codec) Encode(data, dst []byte) []byte {
+	if cap(dst) < nonceSize {
+		dst = make([]byte, nonceSize, nonceSize+len(data)+c.aead.Overhead())
+	}
+	dst = dst[:nonceSize]
 	t := timeNow()
 	binary.LittleEndian.PutUint64(dst, uint64(t.Nanosecond())) // last four bytes are overriden
 	binary.BigEndian.PutUint64(dst[4:], uint64(t.Unix()))
 
-	dst = c.aead.Seal(dst, dst, data, nil)
-
-	return base64.StdEncoding.EncodeToString(dst)
+	return c.aead.Seal(dst, dst, data, nil)
 }
 
-func (c *Codec) Decode(data string) ([]byte, error) {
-	cipherText, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		return nil, err
-	} else if len(cipherText) < 12 {
+func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
+	if len(cipherText) < nonceSize {
 		return nil, errInvalidData
 	}
 
@@ -59,15 +56,18 @@ func (c *Codec) Decode(data string) ([]byte, error) {
 		}
 	}
 
-	buf := make([]byte, 0, len(cipherText))
-
-	buf, err = c.aead.Open(buf, cipherText[:12], cipherText[12:], nil)
+	var err error
+	dst, err = c.aead.Open(dst, cipherText[:nonceSize], cipherText[nonceSize:], nil)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return buf, nil
+	return dst, nil
+}
+
+func (c *Codec) Overhead() int {
+	return c.aead.Overhead() + nonceSize
 }
 
 var (

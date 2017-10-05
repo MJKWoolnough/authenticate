@@ -2,6 +2,7 @@ package authenticate
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"testing"
 	"time"
@@ -58,7 +59,10 @@ func TestSecureEncode(t *testing.T) {
 			DecodeTime: tn.Add(time.Second),
 		},
 	}
-	var ts [2]time.Time
+	var (
+		ts  [2]time.Time
+		buf [1024]byte
+	)
 	for n, test := range tests {
 		ts[0] = test.EncodeTime
 		ts[1] = test.DecodeTime
@@ -75,12 +79,13 @@ func TestSecureEncode(t *testing.T) {
 			t.Errorf("test %d: failed to get expected codec error", n+1)
 			continue
 		}
-		d := c.Encode(test.PlainText)
-		if d != test.CipherText {
+		d := c.Encode(test.PlainText, buf[:512:512])
+		bd := base64.StdEncoding.EncodeToString(d)
+		if bd != test.CipherText {
 			t.Errorf("test %d: got incorrect cipher text", n+1)
 			continue
 		}
-		e, err := c.Decode(d)
+		e, err := c.Decode(d, buf[512:512])
 		if err != nil {
 			if test.DecodeError == nil {
 				t.Errorf("test %d: unexpected decode error: %s", n+1)
