@@ -34,8 +34,9 @@ func NewCodec(key []byte, maxAge time.Duration) (*Codec, error) {
 func (c *Codec) Encode(data, dst []byte) []byte {
 	if cap(dst) < nonceSize {
 		dst = make([]byte, nonceSize, nonceSize+len(data)+c.aead.Overhead())
+	} else {
+		dst = dst[:nonceSize]
 	}
-	dst = dst[:nonceSize]
 	t := timeNow()
 	binary.LittleEndian.PutUint64(dst, uint64(t.Nanosecond())) // last four bytes are overriden
 	binary.BigEndian.PutUint64(dst[4:], uint64(t.Unix()))
