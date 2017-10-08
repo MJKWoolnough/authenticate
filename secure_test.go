@@ -31,7 +31,7 @@ func TestSecureEncode(t *testing.T) {
 	}{
 		{
 			Key:        []byte{0},
-			CodecError: errInvalidAES,
+			CodecError: ErrInvalidAES,
 		},
 		{
 			Key:         []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
@@ -40,7 +40,7 @@ func TestSecureEncode(t *testing.T) {
 			CipherText:  "AAAAAAAAAAAdKAY8ip5Rg52eDtMjh+K9l8a1hzJ8VmWoruZ9B9DeeKM=",
 			EncodeTime:  tn,
 			DecodeTime:  tn.Add(time.Second * 2),
-			DecodeError: errExpired,
+			DecodeError: ErrExpired,
 		},
 		{
 			Key:        []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
