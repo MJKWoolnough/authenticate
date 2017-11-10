@@ -88,7 +88,7 @@ func TestSecureEncode(t *testing.T) {
 		e, err := c.Decode(d, buf[512:512])
 		if err != nil {
 			if test.DecodeError == nil {
-				t.Errorf("test %d: unexpected decode error: %s", n+1)
+				t.Errorf("test %d: unexpected decode error: %s", n+1, err)
 			} else if err != test.DecodeError {
 				t.Errorf("test %d: go incorrect decode error: %s", n+1, err)
 			}
