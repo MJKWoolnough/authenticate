@@ -1,5 +1,5 @@
 // Package authenticate provides a simple interface to encrypt and authenticate a message
-package authenticate
+package authenticate // import "vimagination.zapto.org/authenticate"
 
 import (
 	"crypto/aes"
@@ -7,7 +7,7 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/MJKWoolnough/errors"
+	"vimagination.zapto.org/errors"
 )
 
 var timeNow = time.Now
