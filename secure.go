@@ -5,9 +5,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"time"
-
-	"vimagination.zapto.org/errors"
 )
 
 var timeNow = time.Now
@@ -77,7 +77,7 @@ func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
 	dst, err = c.aead.Open(dst, cipherText[:nonceSize], cipherText[nonceSize:], nil)
 
 	if err != nil {
-		return nil, errors.WithContext("error opening ciphertext: ", err)
+		return nil, fmt.Errorf("error opening ciphertext: %w", err)
 	}
 
 	return dst, nil
@@ -90,8 +90,8 @@ func (c *Codec) Overhead() int {
 }
 
 // Errors
-const (
-	ErrInvalidAES  errors.Error = "invalid AES key, must be 16, 24 or 32 bytes"
-	ErrInvalidData errors.Error = "invalid cipher text"
-	ErrExpired     errors.Error = "data expired"
+var (
+	ErrInvalidAES  = errors.New("invalid AES key, must be 16, 24 or 32 bytes")
+	ErrInvalidData = errors.New("invalid cipher text")
+	ErrExpired     = errors.New("data expired")
 )
