@@ -1,6 +1,6 @@
 # authenticate
 --
-    import "github.com/MJKWoolnough/authenticate"
+    import "vimagination.zapto.org/authenticate"
 
 Package authenticate provides a simple interface to encrypt and authenticate a
 ### message
@@ -8,10 +8,10 @@ Package authenticate provides a simple interface to encrypt and authenticate a
 ## Usage
 
 ```go
-const (
-	ErrInvalidAES  errors.Error = "invalid AES key, must be 16, 24 or 32 bytes"
-	ErrInvalidData errors.Error = "invalid cipher text"
-	ErrExpired     errors.Error = "data expired"
+var (
+	ErrInvalidAES  = errors.New("invalid AES key, must be 16, 24 or 32 bytes")
+	ErrInvalidData = errors.New("invalid cipher text")
+	ErrExpired     = errors.New("data expired")
 )
 ```
 Errors
