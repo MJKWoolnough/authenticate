@@ -1,4 +1,4 @@
-// Package authenticate provides a simple interface to encrypt and authenticate a message
+// Package authenticate provides a simple interface to encrypt and authenticate a message.
 package authenticate // import "vimagination.zapto.org/authenticate"
 
 import (
@@ -14,7 +14,7 @@ var timeNow = time.Now
 
 const nonceSize = 12
 
-// Codec represents an initilised encoder/decoder
+// Codec represents an initilised encoder/decoder.
 type Codec struct {
 	aead   cipher.AEAD
 	maxAge time.Duration
@@ -29,10 +29,14 @@ func NewCodec(key []byte, maxAge time.Duration) (*Codec, error) {
 	if l := len(key); l != 16 && l != 24 && l != 32 {
 		return nil, ErrInvalidAES
 	}
+
 	a := make([]byte, len(key))
+
 	copy(a, key)
+
 	block, _ := aes.NewCipher(a)
 	aead, _ := cipher.NewGCMWithNonceSize(block, nonceSize)
+
 	return &Codec{
 		aead:   aead,
 		maxAge: maxAge,
@@ -49,8 +53,10 @@ func (c *Codec) Encode(data, dst []byte) []byte {
 	} else {
 		dst = dst[:nonceSize]
 	}
+
 	t := timeNow()
-	binary.LittleEndian.PutUint64(dst, uint64(t.Nanosecond())) // last four bytes are overriden
+
+	binary.LittleEndian.PutUint64(dst, uint64(t.Nanosecond())) // last four bytes are overridden
 	binary.BigEndian.PutUint64(dst[4:], uint64(t.Unix()))
 
 	return c.aead.Seal(dst, dst, data, nil)
@@ -74,8 +80,8 @@ func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
 	}
 
 	var err error
-	dst, err = c.aead.Open(dst, cipherText[:nonceSize], cipherText[nonceSize:], nil)
 
+	dst, err = c.aead.Open(dst, cipherText[:nonceSize], cipherText[nonceSize:], nil)
 	if err != nil {
 		return nil, fmt.Errorf("error opening ciphertext: %w", err)
 	}
@@ -84,12 +90,12 @@ func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
 }
 
 // Overhead returns the maximum number of bytes that the ciphertext will be
-// longer than the plain text
+// longer than the plain text.
 func (c *Codec) Overhead() int {
 	return c.aead.Overhead() + nonceSize
 }
 
-// Errors
+// Errors.
 var (
 	ErrInvalidAES  = errors.New("invalid AES key, must be 16, 24 or 32 bytes")
 	ErrInvalidData = errors.New("invalid cipher text")
