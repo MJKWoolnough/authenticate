@@ -14,7 +14,7 @@ var timeNow = time.Now
 
 const nonceSize = 12
 
-// Codec represents an initilised encoder/decoder.
+// Codec represents an initialised encoder/decoder.
 type Codec struct {
 	aead   cipher.AEAD
 	maxAge time.Duration
