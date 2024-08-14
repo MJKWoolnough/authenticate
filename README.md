@@ -3,7 +3,7 @@
     import "vimagination.zapto.org/authenticate"
 
 Package authenticate provides a simple interface to encrypt and authenticate a
-### message
+message.
 
 ## Usage
 
@@ -14,7 +14,7 @@ var (
 	ErrExpired     = errors.New("data expired")
 )
 ```
-Errors
+Errors.
 
 #### type Codec
 
@@ -23,7 +23,7 @@ type Codec struct {
 }
 ```
 
-Codec represents an initilised encoder/decoder
+Codec represents an initialised encoder/decoder.
 
 #### func  NewCodec
 
@@ -64,4 +64,4 @@ accordingly.
 func (c *Codec) Overhead() int
 ```
 Overhead returns the maximum number of bytes that the ciphertext will be longer
-than the plain text
+than the plain text.
