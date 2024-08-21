@@ -41,8 +41,8 @@ is younger than the given time.
 ```go
 func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error)
 ```
-Decode takes a ciphertext slice and a destination buffer and returns the
-decrypted data or an error if the ciphertext is invalid or expired.
+Decode takes a cipher text slice and a destination buffer and returns the
+decrypted data or an error if the cipher text is invalid or expired.
 
 If the destination buffer is too small, or nil, it will be allocated
 accordingly.
@@ -63,5 +63,5 @@ accordingly.
 ```go
 func (c *Codec) Overhead() int
 ```
-Overhead returns the maximum number of bytes that the ciphertext will be longer
+Overhead returns the maximum number of bytes that the cipher text will be longer
 than the plain text.
