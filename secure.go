@@ -49,7 +49,7 @@ func NewCodec(key []byte, maxAge time.Duration) (*Codec, error) {
 // If the destination buffer is too small, or nil, it will be allocated accordingly.
 func (c *Codec) Encode(data, dst []byte) []byte {
 	if cap(dst) < nonceSize {
-		dst = make([]byte, nonceSize, nonceSize+len(data)+c.aead.Overhead())
+		dst = make([]byte, nonceSize, len(data)+c.Overhead())
 	} else {
 		dst = dst[:nonceSize]
 	}
