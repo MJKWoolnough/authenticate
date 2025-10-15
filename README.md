@@ -1,67 +1,65 @@
 # authenticate
+
+[![CI](https://github.com/MJKWoolnough/authenticate/actions/workflows/go-checks.yml/badge.svg)](https://github.com/MJKWoolnough/authenticate/actions)
+[![Go Reference](https://pkg.go.dev/badge/vimagination.zapto.org/authenticate.svg)](https://pkg.go.dev/vimagination.zapto.org/authenticate)
+[![Go Report Card](https://goreportcard.com/badge/vimagination.zapto.org/authenticate)](https://goreportcard.com/report/vimagination.zapto.org/authenticate)
+
 --
     import "vimagination.zapto.org/authenticate"
 
-Package authenticate provides a simple interface to encrypt and authenticate a
-message.
+Package authenticate provides a simple interface to encrypt and authenticate a message.
+
+## Highlights
+
+ - Small API to sign and verify data.
 
 ## Usage
 
 ```go
-var (
-	ErrInvalidAES  = errors.New("invalid AES key, must be 16, 24 or 32 bytes")
-	ErrInvalidData = errors.New("invalid cipher text")
-	ErrExpired     = errors.New("data expired")
+package main
+
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"vimagination.zapto.org/authenticate"
 )
-```
-Errors.
 
-#### type Codec
+func main() {
+	codec, err := authenticate.NewCodec([]byte("!THIS IS MY KEY!"), time.Second)
+	if err != nil {
+		fmt.Println(err)
 
-```go
-type Codec struct {
+		return
+	}
+
+	message := []byte("My Message")
+	encoded := codec.Encode(message, nil)
+
+	if decoded, err := codec.Decode(encoded, nil); err != nil {
+		fmt.Println(err)
+	} else {
+		os.Stdout.Write(decoded)
+	}
+
+	encoded[0] = encoded[0] ^ 128
+
+	if decoded, err := codec.Decode(encoded, nil); err != nil {
+		fmt.Printf("\n\n%s", err)
+	} else {
+		os.Stdout.Write(decoded)
+	}
+
+	// Output:
+	// My Message
+	//
+	// error opening cipher text: cipher: message authentication failed
 }
 ```
 
-Codec represents an initialised encoder/decoder.
+## Documentation
 
-#### func  NewCodec
+Full API docs can be found at:
 
-```go
-func NewCodec(key []byte, maxAge time.Duration) (*Codec, error)
-```
-NewCodec takes the encryption key, which should be 16, 24 or 32 bytes long, and
-an optional duration to create a new Codec.
-
-The optional Duration is used to only allow messages to only be valid while it
-is younger than the given time.
-
-#### func (*Codec) Decode
-
-```go
-func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error)
-```
-Decode takes a cipher text slice and a destination buffer and returns the
-decrypted data or an error if the cipher text is invalid or expired.
-
-If the destination buffer is too small, or nil, it will be allocated
-accordingly.
-
-#### func (*Codec) Encode
-
-```go
-func (c *Codec) Encode(data, dst []byte) []byte
-```
-Encode takes a data slice and a destination buffer and returns the encrypted
-data.
-
-If the destination buffer is too small, or nil, it will be allocated
-accordingly.
-
-#### func (*Codec) Overhead
-
-```go
-func (c *Codec) Overhead() int
-```
-Overhead returns the maximum number of bytes that the cipher text will be longer
-than the plain text.
+https://pkg.go.dev/vimagination.zapto.org/authenticate
