@@ -3,22 +3,24 @@ package authenticate
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"testing"
 	"time"
 )
 
-var times []time.Time
+var times = []time.Time{time.Now(), time.Now(), time.Now()}
 
 func init() {
 	timeNow = func() time.Time {
 		t := times[0]
 		times = times[1:]
+
 		return t
 	}
 }
 
 func TestSecureEncode(t *testing.T) {
+	oldTimes := times
+
 	tn := time.Date(1985, time.July, 2, 14, 25, 0, 0, time.UTC)
 	tests := []struct {
 		Key                    []byte
@@ -63,10 +65,12 @@ func TestSecureEncode(t *testing.T) {
 		ts  [2]time.Time
 		buf [1024]byte
 	)
+
 	for n, test := range tests {
 		ts[0] = test.EncodeTime
 		ts[1] = test.DecodeTime
 		times = ts[:]
+
 		c, err := NewCodec(test.Key, test.Timeout)
 		if err != nil {
 			if test.CodecError == nil {
@@ -74,19 +78,19 @@ func TestSecureEncode(t *testing.T) {
 			} else if err != test.CodecError {
 				t.Errorf("test %d: got incorrect codec error: %s", n+1, err)
 			}
+
 			continue
 		} else if test.CodecError != nil {
 			t.Errorf("test %d: failed to get expected codec error", n+1)
+
 			continue
 		}
+
 		d := c.Encode(test.PlainText, buf[:512:512])
-		bd := base64.StdEncoding.EncodeToString(d)
-		if bd != test.CipherText {
+
+		if bd := base64.StdEncoding.EncodeToString(d); bd != test.CipherText {
 			t.Errorf("test %d: got incorrect cipher text", n+1)
-			continue
-		}
-		e, err := c.Decode(d, buf[512:512])
-		if err != nil {
+		} else if e, err := c.Decode(d, buf[512:512]); err != nil {
 			if test.DecodeError == nil {
 				t.Errorf("test %d: unexpected decode error: %s", n+1, err)
 			} else if err != test.DecodeError {
@@ -95,9 +99,9 @@ func TestSecureEncode(t *testing.T) {
 		} else if test.DecodeError != nil {
 			t.Errorf("test %d: failed to get expected decode error", n+1)
 		} else if !bytes.Equal(test.PlainText, e) {
-			fmt.Println(e)
 			t.Errorf("test %d: result does not match plaintext", n+1)
 		}
 	}
 
+	times = oldTimes
 }
