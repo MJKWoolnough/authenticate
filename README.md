@@ -11,7 +11,8 @@ Package authenticate provides a simple interface to encrypt and authenticate a m
 
 ## Highlights
 
- - Small API to sign and verify data.
+ - Encrypt or sign data.
+ - Optional data exiration.
 
 ## Usage
 
