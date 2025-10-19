@@ -89,6 +89,48 @@ func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
 	return dst, nil
 }
 
+func (c *Codec) Sign(data, dst []byte) []byte {
+	if cap(dst) < len(data)+nonceSize {
+		dst = make([]byte, nonceSize, len(data)+c.Overhead())
+	} else {
+		dst = dst[:len(data)+nonceSize]
+	}
+
+	nonce := dst[len(data) : len(data)+nonceSize]
+	_ = append(dst[:0], data...)
+
+	t := timeNow()
+
+	binary.LittleEndian.PutUint64(nonce, uint64(t.Nanosecond())) // last four bytes are overridden
+	binary.BigEndian.PutUint64(nonce[4:], uint64(t.Unix()))
+
+	return c.aead.Seal(dst, nonce, nil, data)
+}
+
+func (c *Codec) Verify(data []byte) ([]byte, error) {
+	o := c.Overhead()
+
+	if len(data) < o {
+		return nil, ErrInvalidData
+	}
+
+	plain := data[:len(data)-o]
+	nonce := data[len(plain) : len(plain)+nonceSize]
+	sig := data[len(plain)+nonceSize:]
+
+	if c.maxAge > 0 {
+		if t := timeNow().Sub(time.Unix(int64(binary.BigEndian.Uint64(nonce[4:12])), 0)); t > c.maxAge || t < 0 {
+			return nil, ErrExpired
+		}
+	}
+
+	if _, err := c.aead.Open(nil, nonce, sig, plain); err != nil {
+		return nil, fmt.Errorf("error verifying signature: %w", err)
+	}
+
+	return plain, nil
+}
+
 // Overhead returns the maximum number of bytes that the cipher text will be
 // longer than the plain text.
 func (c *Codec) Overhead() int {
