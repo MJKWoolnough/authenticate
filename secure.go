@@ -94,21 +94,27 @@ func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
 //
 // If the destination buffer is too small, or nil, it will be allocated accordingly.
 func (c *Codec) Sign(data, dst []byte) []byte {
-	if cap(dst) < len(data)+nonceSize {
+	if cap(dst) < len(data)+c.Overhead() {
 		dst = make([]byte, nonceSize, len(data)+c.Overhead())
 	} else {
-		dst = dst[:len(data)+nonceSize]
+		dst = dst[:len(data)+c.Overhead()]
 	}
 
-	nonce := dst[len(data) : len(data)+nonceSize]
+	var nonce [12]byte
+
 	_ = append(dst[:0], data...)
 
 	t := timeNow()
 
-	binary.LittleEndian.PutUint64(nonce, uint64(t.Nanosecond())) // last four bytes are overridden
+	binary.LittleEndian.PutUint64(nonce[1:], uint64(t.Nanosecond())) // last five bytes are overridden
 	binary.BigEndian.PutUint64(nonce[4:], uint64(t.Unix()))
+	copy(dst[len(data):len(data)+nonceSize], nonce[1:])
 
-	return c.aead.Seal(dst, nonce, nil, data)
+	dst = dst[:len(c.aead.Seal(dst[:len(data)+nonceSize-1], nonce[:], nil, data))+1]
+
+	dst[len(dst)-1] = byte(len(dst) - len(data))
+
+	return dst
 }
 
 // Verify takes data returned from the Sign method and returns the unsigned
@@ -117,15 +123,17 @@ func (c *Codec) Sign(data, dst []byte) []byte {
 //
 // If the destination buffer is too small, or nil, it will be allocated accordingly.
 func (c *Codec) Verify(data []byte) ([]byte, error) {
-	o := c.Overhead()
-
-	if len(data) < o {
+	if len(data) < nonceSize {
 		return nil, ErrInvalidData
 	}
 
-	plain := data[:len(data)-o]
-	nonce := data[len(plain) : len(plain)+nonceSize]
-	sig := data[len(plain)+nonceSize:]
+	var nonce [12]byte
+
+	sigLen := int(data[len(data)-1])
+	plain := data[:len(data)-sigLen]
+	copy(nonce[1:], data[len(plain):])
+
+	sig := data[len(plain)+nonceSize-1 : len(data)-1]
 
 	if c.maxAge > 0 {
 		if t := timeNow().Sub(time.Unix(int64(binary.BigEndian.Uint64(nonce[4:12])), 0)); t > c.maxAge || t < 0 {
@@ -133,7 +141,7 @@ func (c *Codec) Verify(data []byte) ([]byte, error) {
 		}
 	}
 
-	if _, err := c.aead.Open(nil, nonce, sig, plain); err != nil {
+	if _, err := c.aead.Open(nil, nonce[:], sig, plain); err != nil {
 		return nil, fmt.Errorf("error verifying signature: %w", err)
 	}
 
