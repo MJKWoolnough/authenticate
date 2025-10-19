@@ -23,8 +23,8 @@ type Codec struct {
 // NewCodec takes the encryption key, which should be 16, 24 or 32 bytes long,
 // and an optional duration to create a new Codec.
 //
-// The optional Duration is used to only allow messages to only be valid while
-// it is younger than the given time.
+// The optional Duration is used to allow messages to only be valid while it is
+// younger than the given time. Set to 0 to disable expiration checking.
 func NewCodec(key []byte, maxAge time.Duration) (*Codec, error) {
 	if l := len(key); l != 16 && l != 24 && l != 32 {
 		return nil, ErrInvalidAES
@@ -89,6 +89,10 @@ func (c *Codec) Decode(cipherText, dst []byte) ([]byte, error) {
 	return dst, nil
 }
 
+// Sign takes a data slice and a destination buffer and returns the data with a
+// signature appended
+//
+// If the destination buffer is too small, or nil, it will be allocated accordingly.
 func (c *Codec) Sign(data, dst []byte) []byte {
 	if cap(dst) < len(data)+nonceSize {
 		dst = make([]byte, nonceSize, len(data)+c.Overhead())
@@ -107,6 +111,11 @@ func (c *Codec) Sign(data, dst []byte) []byte {
 	return c.aead.Seal(dst, nonce, nil, data)
 }
 
+// Verify takes data returned from the Sign method and returns the unsigned
+// data, or and error if the signature is invalid or the optional exiration has
+// been exceeded.
+//
+// If the destination buffer is too small, or nil, it will be allocated accordingly.
 func (c *Codec) Verify(data []byte) ([]byte, error) {
 	o := c.Overhead()
 
