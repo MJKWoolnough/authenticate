@@ -12,7 +12,7 @@ Package authenticate provides a simple interface to encrypt and authenticate a m
 ## Highlights
 
  - Encrypt or sign data.
- - Optional data exiration.
+ - Optional data expiration.
 
 ## Usage
 
