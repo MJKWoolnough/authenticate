@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/MJKWoolnough/authenticate/actions/workflows/go-checks.yml/badge.svg)](https://github.com/MJKWoolnough/authenticate/actions)
 [![Go Reference](https://pkg.go.dev/badge/vimagination.zapto.org/authenticate.svg)](https://pkg.go.dev/vimagination.zapto.org/authenticate)
-[![Go Report Card](https://goreportcard.com/badge/vimagination.zapto.org/authenticate)](https://goreportcard.com/report/vimagination.zapto.org/authenticate)
 
 --
     import "vimagination.zapto.org/authenticate"
